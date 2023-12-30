@@ -6,22 +6,23 @@
 using namespace std;
 
 bool ArAtsidaro(const string& failoPasirinkimas);
-void rasymas(const string& egzoFailoPavadinimas, const string& rezultatuFailoPavadinimas); 
+void rasymas();
+void failoSkaitymas(const string& failoPasirinkimas);
 
 int main() {
-    string egzoFailoPavadinimas = "egzo.txt";
-    string rezultatuFailoPavadinimas = "rezultatai.txt";
-    cout << "Skaitymas vyksta is failo " << egzoFailoPavadinimas << endl;
+    string failoPavadinimas = "egzo.txt";
+    cout << "Skaitymas vyksta is failo " << failoPavadinimas << endl;
     cout << "\nPalaukite kol failas bus nuskaitytas" << endl;
 
-    if (!ArAtsidaro(egzoFailoPavadinimas)) {
+    if (!ArAtsidaro(failoPavadinimas)) {
         cout << "\nNurodyto failo nepavyko atidaryti." << endl;
         return 1;
     }
+    failoSkaitymas(failoPavadinimas);
 
-    rasymas(egzoFailoPavadinimas, rezultatuFailoPavadinimas);
+    rasymas();
 
-    return 0; 
+    return 0;
 }
 
 bool ArAtsidaro(const string& failoPasirinkimas) {
@@ -29,25 +30,33 @@ bool ArAtsidaro(const string& failoPasirinkimas) {
     return in.good();
 }
 
-void rasymas(const string& egzoFailoPavadinimas, const string& rezultatuFailoPavadinimas) {
-    ifstream egzoFailas(egzoFailoPavadinimas);
-    ofstream rezultatuFailas(rezultatuFailoPavadinimas);
+void rasymas() {
+    ofstream out("rezultatai.txt");
 
-    if (!egzoFailas.good()) {
-        cout << "Nepavyko atidaryti egzo failo." << endl;
+    if (!out.good()) {
+        cout << "Failo nepavyko sukurti." << endl;
         return;
     }
 
-    if (!rezultatuFailas.good()) {
-        cout << "Nepavyko atidaryti rezultatu failo." << endl;
-        return;
-    }
+    out << "URLS " << endl;
 
+    out << left << setw(30) << "ZODIS" << setw(10) << "KIEKIS" << "EILUCIU NR." << endl;
+
+    out.close();
+}
+void failoSkaitymas(const string& failoPasirinkimas) {
+    ifstream failas(failoPasirinkimas);
+    stringstream tekstas;
+    tekstas << failas.rdbuf();
+    failas.close();
 
     string eilute;
-    while (getline(egzoFailas, eilute)) {
-        rezultatuFailas << eilute << endl;
-    }
+    int eilutesNumeris = 0;
 
-    cout << "Informacija buvo sėkmingai išvesta i rezultatu faila." << endl;
+    while (getline(tekstas, eilute)) {
+        eilutesNumeris++;
+        string zodis;
+        istringstream in(eilute);
+
+    }
 }
