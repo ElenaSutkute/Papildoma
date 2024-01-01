@@ -4,22 +4,22 @@
 #include <iomanip>
 #include <vector>
 #include <map>
+#include <regex>
 #include <algorithm>
-#include <cctype>
-
 
 using namespace std;
 
 void pridedameISarasa(const string& zodis, map<string, vector<int>>& sarasas, int eilutesNumeris);
 bool ArAtsidaro(const string& failoPasirinkimas);
-void rasymas(map<string, vector<int>>& sarasas);
-
-void failoSkaitymas(const string& failoPasirinkimas, map<string, vector<int>>& sarasas);
-void sutvarkomeZodi(string& zodis);
+void rasymas(map<string, vector<int>>& sarasas, const vector<string>& urls);
+void failoSkaitymas(const string& failoPasirinkimas, map<string, vector<int>>& sarasas, vector<string>& urls);
+string sutvarkomeZodi(const string& zodis);
+bool TikrinameArUrl(const string& zodis);
 
 int main() {
 
     map<string, vector<int>> sarasas;
+    vector<string> urls;
 
     string failoPavadinimas = "egzo.txt";
 
@@ -32,11 +32,11 @@ int main() {
         return 1;
     }
 
-    failoSkaitymas(failoPavadinimas, sarasas);
+    failoSkaitymas(failoPavadinimas, sarasas, urls);
 
     cout << "\nFailas nuskaitytas. Rezultatus rasite faile rezultatai.txt" << endl;
 
-    rasymas(sarasas);
+    rasymas(sarasas, urls);
 
     return 0;
 }
@@ -45,33 +45,28 @@ bool ArAtsidaro(const string& failoPasirinkimas) {
     ifstream in(failoPasirinkimas);
     return in.good();
 }
-
-
-
-bool isLithuanianLetter(char c) {
-    return ((c >= 0x80 && c <= 0xAF) || (c >= 0xC4 && c <= 0xCB) || (c >= 0xD0 && c <= 0xDB) || (c >= 0xDC && c <= 0xFF));
+string sutvarkomeZodi(const string& zodis) {
+    regex negrazusZodisRegex("[^\\w]+");
+    string grazusZodis = regex_replace(zodis, negrazusZodisRegex, "");
+    transform(grazusZodis.begin(), grazusZodis.end(), grazusZodis.begin(), ::tolower);
+    return grazusZodis;
 }
 
-void sutvarkomeZodi(string& zodis) {
-    zodis.erase(remove_if(zodis.begin(), zodis.end(), [](char c) {
-        return !isalpha(c) && !isLithuanianLetter(c);
-    }), zodis.end());
+bool TikrinameArUrl(const string& zodis) {
+    regex urlRegex("(((http|https)://)?www\\.)?[a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%._\\+~#?&//=]*)");
+    return regex_match(zodis, urlRegex);
 }
-
 
 void pridedameISarasa(const string& zodis, map<string, vector<int>>& sarasas, int eilutesNumeris) {
-    string cleanedZodis = zodis;
-    sutvarkomeZodi(cleanedZodis);
-
-    if (cleanedZodis.empty()) {
+    if (zodis.empty()) {
         return;
     }
 
-    auto it = sarasas.find(cleanedZodis);
+    auto it = sarasas.find(zodis);
 
     if (it == sarasas.end()) {
         vector<int> eiluciuNr{eilutesNumeris};
-        sarasas[cleanedZodis] = eiluciuNr;
+        sarasas[zodis] = eiluciuNr;
     } else {
         vector<int>& eiluciuNr = it->second;
         if (eilutesNumeris != eiluciuNr.back()) {
@@ -80,8 +75,7 @@ void pridedameISarasa(const string& zodis, map<string, vector<int>>& sarasas, in
     }
 }
 
-
-void rasymas(map<string, vector<int>>& sarasas) {
+void rasymas(map<string, vector<int>>& sarasas, const vector<string>& urls) {
     ofstream out("rezultatai.txt");
 
     if (!out.good()) {
@@ -89,7 +83,11 @@ void rasymas(map<string, vector<int>>& sarasas) {
         return;
     }
 
-    out << "URLS " << endl;
+    out << "URLS (" << urls.size() << ")" << endl;
+
+    for (const auto& url : urls) {
+        out << url << endl;
+    }
 
     out << endl;
 
@@ -111,7 +109,7 @@ void rasymas(map<string, vector<int>>& sarasas) {
 
     out.close();
 }
-void failoSkaitymas(const string& failoPasirinkimas, map<string, vector<int>>& sarasas) {
+void failoSkaitymas(const string& failoPasirinkimas, map<string, vector<int>>& sarasas, vector<string>& urls) {
     ifstream failas(failoPasirinkimas);
     stringstream tekstas;
     tekstas << failas.rdbuf();
@@ -120,17 +118,20 @@ void failoSkaitymas(const string& failoPasirinkimas, map<string, vector<int>>& s
     string eilute;
     int eilutesNumeris = 0;
 
-    while (getline(tekstas, eilute))
-    {
+    while (getline(tekstas, eilute)) {
         eilutesNumeris++;
         string zodis;
         istringstream in(eilute);
 
-        while (in >> zodis)
-        {
-            pridedameISarasa(zodis, sarasas, eilutesNumeris);
+        while (in >> zodis) {
+            bool arYraSkaicius = any_of(zodis.begin(), zodis.end(), [](char c) { return isdigit(c); });
+
+            if (TikrinameArUrl(zodis)) {
+                urls.push_back(zodis);
+            } else if (!arYraSkaicius) {
+                zodis = sutvarkomeZodi(zodis);
+                pridedameISarasa(zodis, sarasas, eilutesNumeris);
+            }
         }
     }
-
 }
-
