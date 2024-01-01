@@ -4,14 +4,18 @@
 #include <iomanip>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <cctype>
+
 
 using namespace std;
 
 void pridedameISarasa(const string& zodis, map<string, vector<int>>& sarasas, int eilutesNumeris);
 bool ArAtsidaro(const string& failoPasirinkimas);
 void rasymas(map<string, vector<int>>& sarasas);
-void failoSkaitymas(const string& failoPasirinkimas);
+
 void failoSkaitymas(const string& failoPasirinkimas, map<string, vector<int>>& sarasas);
+void sutvarkomeZodi(string& zodis);
 
 int main() {
 
@@ -42,16 +46,32 @@ bool ArAtsidaro(const string& failoPasirinkimas) {
     return in.good();
 }
 
+
+
+bool isLithuanianLetter(char c) {
+    return ((c >= 0x80 && c <= 0xAF) || (c >= 0xC4 && c <= 0xCB) || (c >= 0xD0 && c <= 0xDB) || (c >= 0xDC && c <= 0xFF));
+}
+
+void sutvarkomeZodi(string& zodis) {
+    zodis.erase(remove_if(zodis.begin(), zodis.end(), [](char c) {
+        return !isalpha(c) && !isLithuanianLetter(c);
+    }), zodis.end());
+}
+
+
 void pridedameISarasa(const string& zodis, map<string, vector<int>>& sarasas, int eilutesNumeris) {
-    if (zodis.empty()) {
+    string cleanedZodis = zodis;
+    sutvarkomeZodi(cleanedZodis);
+
+    if (cleanedZodis.empty()) {
         return;
     }
 
-    auto it = sarasas.find(zodis);
+    auto it = sarasas.find(cleanedZodis);
 
     if (it == sarasas.end()) {
         vector<int> eiluciuNr{eilutesNumeris};
-        sarasas[zodis] = eiluciuNr;
+        sarasas[cleanedZodis] = eiluciuNr;
     } else {
         vector<int>& eiluciuNr = it->second;
         if (eilutesNumeris != eiluciuNr.back()) {
@@ -59,6 +79,7 @@ void pridedameISarasa(const string& zodis, map<string, vector<int>>& sarasas, in
         }
     }
 }
+
 
 void rasymas(map<string, vector<int>>& sarasas) {
     ofstream out("rezultatai.txt");
@@ -112,3 +133,4 @@ void failoSkaitymas(const string& failoPasirinkimas, map<string, vector<int>>& s
     }
 
 }
+
