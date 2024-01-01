@@ -53,7 +53,7 @@ string sutvarkomeZodi(const string& zodis) {
 }
 
 bool TikrinameArUrl(const string& zodis) {
-    regex urlRegex("(((http|https)://)?www\\.)?[a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%._\\+~#?&//=]*)");
+    regex urlRegex(R"((http[s]?|www)\:\/\/[^\s]+)");
     return regex_match(zodis, urlRegex);
 }
 
